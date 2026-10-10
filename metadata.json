@@ -1,0 +1,7 @@
+{
+  "name": "ParkGuard — Smart Parking Violation Management System",
+  "description": "Comprehensive parking violation management system for campus and commercial enforcement, repeat offender tracking, and penalty resolution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
