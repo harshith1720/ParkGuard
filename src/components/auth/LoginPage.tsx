@@ -54,56 +54,56 @@ export const LoginPage: React.FC = () => {
     {
       role: 'OFFICER' as const,
       email: 'officer@campus.edu',
-      name: 'Officer Marcus Reynolds',
+      name: 'Officer Rajesh Kumar',
       badge: 'OFF-402',
       tag: 'Field Enforcement App',
-      desc: 'Scan plates, issue citations, check duplicate & repeat warnings',
-      color: 'border-blue-200 hover:border-blue-400 bg-blue-50/50',
+      desc: 'Scan plates, issue citations with GPS & map preview, check duplicate & repeat warnings',
+      color: 'border-orange-200 hover:border-[#F97316] bg-orange-50/40',
     },
     {
       role: 'OWNER' as const,
       email: 'owner@campus.edu',
       name: 'Aarav Sharma (Student)',
-      badge: 'KA01AB1234',
+      badge: 'KA 01 AB 1234',
       tag: 'Vehicle Owner Portal',
-      desc: 'View personal citations, see photo evidence, pay fines & file appeals',
-      color: 'border-emerald-200 hover:border-emerald-400 bg-emerald-50/50',
+      desc: 'View personal citations, see photo evidence, pay fines via verified gateway & file appeals',
+      color: 'border-emerald-200 hover:border-emerald-400 bg-emerald-50/40',
     },
     {
       role: 'ADMIN' as const,
       email: 'admin@campus.edu',
-      name: 'Commander Elena Gomez',
+      name: 'Commander Vikram Anand',
       badge: 'ADM-001',
       tag: 'Admin & Supervisor Console',
       desc: 'Confirm citations, adjudicate appeals, configure zones & audit logs',
-      color: 'border-purple-200 hover:border-purple-400 bg-purple-50/50',
+      color: 'border-purple-200 hover:border-purple-400 bg-purple-50/40',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FFFCF9] text-[#1F2937] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#142B4A] text-white shadow-lg shadow-blue-900/20 mb-3">
-          <ShieldCheck className="w-7 h-7 text-blue-400" />
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#9A3412] text-white shadow-lg shadow-orange-950/20 mb-3">
+          <ShieldCheck className="w-7 h-7 text-white" />
         </div>
         <h1 className="text-2xl font-black text-slate-900 tracking-tight">
           ParkGuard Enforcement
         </h1>
         <p className="text-xs text-slate-500 mt-1">
-          Role-Based Parking Violation & Compliance Management System
+          Role-Based Parking Compliance & Citation Settlement System (INR)
         </p>
       </div>
 
       {/* Main Auth Container */}
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-xl">
-        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-xl p-6 sm:p-8 space-y-6">
           {/* Mode Switcher Tabs */}
           <div className="flex border-b border-slate-200 text-xs font-semibold">
             <button
               onClick={() => { setMode('login'); setErrorMsg(''); }}
               className={`pb-3 flex-1 text-center transition-colors border-b-2 ${
                 mode === 'login'
-                  ? 'border-blue-600 text-blue-600 font-bold'
+                  ? 'border-[#F97316] text-[#F97316] font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -113,7 +113,7 @@ export const LoginPage: React.FC = () => {
               onClick={() => { setMode('register'); setErrorMsg(''); }}
               className={`pb-3 flex-1 text-center transition-colors border-b-2 ${
                 mode === 'register'
-                  ? 'border-blue-600 text-blue-600 font-bold'
+                  ? 'border-[#F97316] text-[#F97316] font-bold'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -142,7 +142,7 @@ export const LoginPage: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. officer@campus.edu or owner@campus.edu"
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316]/20 focus:border-[#F97316]"
                   />
                 </div>
               </div>
@@ -161,14 +161,14 @@ export const LoginPage: React.FC = () => {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                    className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316]/20 focus:border-[#F97316] font-mono"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#142B4A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-md transition-all"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs font-bold shadow-md transition-all"
               >
                 Sign In to Authorized Portal
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export const LoginPage: React.FC = () => {
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 leading-relaxed">
+              <div className="p-3 bg-orange-50/70 border border-orange-200/80 rounded-lg text-xs text-orange-950 leading-relaxed">
                 <strong>Student / Employee Vehicle Self-Registration:</strong> Creates a dedicated vehicle-owner account linked exclusively to your vehicle license plate.
               </div>
 
@@ -189,7 +189,7 @@ export const LoginPage: React.FC = () => {
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="e.g. Aarav Sharma"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
                   />
                 </div>
                 <div>
@@ -200,7 +200,7 @@ export const LoginPage: React.FC = () => {
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                     placeholder="student@campus.edu"
-                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg"
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
                   />
                 </div>
               </div>
@@ -214,7 +214,7 @@ export const LoginPage: React.FC = () => {
                     value={regPlate}
                     onChange={(e) => setRegPlate(e.target.value.toUpperCase())}
                     placeholder="KA01AB1234"
-                    className="w-full px-3 py-2 text-xs font-mono font-bold uppercase border border-slate-300 rounded-lg"
+                    className="w-full px-3 py-2 text-xs font-mono font-bold uppercase border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
                   />
                 </div>
                 <div>
@@ -224,14 +224,14 @@ export const LoginPage: React.FC = () => {
                     value={regId}
                     onChange={(e) => setRegId(e.target.value)}
                     placeholder="STU-2026-9042"
-                    className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg"
+                    className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
                   />
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1.5"
               >
                 <UserPlus className="w-4 h-4" />
                 Complete Registration & Access My Portal
@@ -245,7 +245,7 @@ export const LoginPage: React.FC = () => {
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 1-Click Role-Based Demo Accounts
               </span>
-              <span className="text-[10px] text-blue-600 font-medium">Ready for Hackathon Review</span>
+              <span className="text-[10px] text-[#F97316] font-semibold">Ready for Evaluation</span>
             </div>
 
             <div className="space-y-2">

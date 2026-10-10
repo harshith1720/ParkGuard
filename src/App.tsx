@@ -45,8 +45,9 @@ const MainLayout: React.FC = () => {
     if (currentUser.role === 'OFFICER') {
       switch (activeTab) {
         case 'dashboard':
-        case 'record':
           return <OfficerPortal />;
+        case 'record':
+          return <RecordViolationView />;
         case 'violations':
           return <AllViolationsView />;
         case 'vehicles':
@@ -86,7 +87,7 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-[#F8FAFC] overflow-hidden text-slate-800">
+    <div className="flex h-screen w-full bg-[#FFFCF9] overflow-hidden text-[#1F2937]">
       {/* Sidebar Navigation */}
       <Sidebar
         isOpenMobile={isMobileMenuOpen}

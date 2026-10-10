@@ -31,6 +31,7 @@ import {
 } from '../../types';
 import { CATEGORY_FINE_MAP, KNOWN_VEHICLES_REGISTRY } from '../../data/initialData';
 import { CitationPrintModal } from '../modals/CitationPrintModal';
+import { CampusGpsMap } from '../common/CampusGpsMap';
 import { formatINR, formatISTDate, calculateDistanceMeters } from '../../utils/formatters';
 
 export const RecordViolationView: React.FC = () => {
@@ -462,7 +463,7 @@ export const RecordViolationView: React.FC = () => {
         {/* Section 1: Vehicle Information */}
         <div>
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Car className="w-4 h-4 text-blue-600" />
+            <Car className="w-4 h-4 text-[#F97316]" />
             1. Vehicle Identification & Details
           </h3>
 
@@ -476,7 +477,7 @@ export const RecordViolationView: React.FC = () => {
                 value={vehiclePlate}
                 onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())}
                 placeholder="e.g. 7RJK429"
-                className={`w-full px-3 py-2 text-xs font-mono font-bold tracking-wider uppercase border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 text-xs font-mono font-bold tracking-wider uppercase border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F97316]/20 focus:border-[#F97316] ${
                   errors.vehiclePlate ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
                 }`}
               />
@@ -495,7 +496,7 @@ export const RecordViolationView: React.FC = () => {
                 onChange={(e) => setVehicleState(e.target.value.toUpperCase())}
                 placeholder="CA"
                 maxLength={3}
-                className="w-full px-3 py-2 text-xs font-mono font-semibold uppercase border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs font-mono font-semibold uppercase border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
               />
             </div>
 
@@ -506,7 +507,7 @@ export const RecordViolationView: React.FC = () => {
               <select
                 value={vehicleType}
                 onChange={(e) => setVehicleType(e.target.value as VehicleType)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316] bg-white"
               >
                 <option value="Sedan">Sedan</option>
                 <option value="SUV">SUV</option>
@@ -527,7 +528,7 @@ export const RecordViolationView: React.FC = () => {
                 value={vehicleMakeModel}
                 onChange={(e) => setVehicleMakeModel(e.target.value)}
                 placeholder="e.g. Subaru Legacy (Silver metallic)"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
               />
             </div>
           </div>
@@ -537,7 +538,7 @@ export const RecordViolationView: React.FC = () => {
         <div className="pt-4 border-t border-slate-100 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-blue-600" />
+              <MapPin className="w-4 h-4 text-[#F97316]" />
               2. Enforcement Location & GPS Detection
             </h3>
 
@@ -546,9 +547,9 @@ export const RecordViolationView: React.FC = () => {
               type="button"
               onClick={handleDetectLocation}
               disabled={gpsStatus === 'LOCATING'}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#142B4A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0"
             >
-              <Navigation className={`w-3.5 h-3.5 text-blue-400 ${gpsStatus === 'LOCATING' ? 'animate-spin' : ''}`} />
+              <Navigation className={`w-3.5 h-3.5 text-white ${gpsStatus === 'LOCATING' ? 'animate-spin' : ''}`} />
               {gpsStatus === 'LOCATING' ? 'Detecting Coordinates...' : 'Detect My Location (GPS)'}
             </button>
           </div>
@@ -600,6 +601,25 @@ export const RecordViolationView: React.FC = () => {
             </div>
           )}
 
+          {/* Interactive Campus GPS & Geofence Map Preview */}
+          <div className="rounded-xl overflow-hidden border border-slate-200">
+            <div className="px-3 py-2 bg-stone-50 border-b border-stone-200 flex items-center justify-between text-xs font-semibold text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#F97316]" />
+                Campus Geofence & GPS Map Preview
+              </span>
+              <span className="text-[11px] text-stone-500 font-mono">
+                {gpsCoords && !isManualException ? `Captured GPS Fix (±${gpsCoords.accuracyMeters}m)` : `${selectedZone.name} Focal Zone`}
+              </span>
+            </div>
+            <CampusGpsMap
+              gpsCoords={!isManualException ? gpsCoords : null}
+              selectedZone={selectedZone}
+              allZones={zones}
+              height="240px"
+            />
+          </div>
+
           {gpsStatus === 'DENIED' && !isManualException && (
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -624,7 +644,7 @@ export const RecordViolationView: React.FC = () => {
               <select
                 value={zoneId}
                 onChange={(e) => setZoneId(e.target.value)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316] bg-white"
               >
                 {zones.map((z) => (
                   <option key={z.id} value={z.id}>
@@ -643,7 +663,7 @@ export const RecordViolationView: React.FC = () => {
                 value={specificLocation}
                 onChange={(e) => setSpecificLocation(e.target.value)}
                 placeholder="e.g. Bay 42, Opposite Campus Union Hydrant #4"
-                className={`w-full px-3 py-2 text-xs border rounded-lg focus:outline-none focus:border-blue-500 ${
+                className={`w-full px-3 py-2 text-xs border rounded-lg focus:outline-none focus:border-[#F97316] ${
                   errors.specificLocation ? 'border-rose-400 bg-rose-50/30' : 'border-slate-300'
                 }`}
               />
@@ -660,7 +680,7 @@ export const RecordViolationView: React.FC = () => {
                 type="checkbox"
                 checked={isManualException}
                 onChange={(e) => setIsManualException(e.target.checked)}
-                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-slate-300 text-[#F97316] focus:ring-[#F97316]"
               />
               <span className="font-medium">
                 Record as Manual Location Exception (Basement garage, satellite obstruction, or device offline)
@@ -677,7 +697,7 @@ export const RecordViolationView: React.FC = () => {
                   value={manualReason}
                   onChange={(e) => setManualReason(e.target.value)}
                   placeholder="e.g. Underground MLCP Level B2 - Concrete slab ceiling blocked GPS reception"
-                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:border-[#F97316]"
                 />
                 {errors.manualReason && (
                   <span className="text-[11px] text-rose-600 mt-0.5 block">{errors.manualReason}</span>
@@ -690,7 +710,7 @@ export const RecordViolationView: React.FC = () => {
         {/* Section 3: Infraction Category & Severity */}
         <div className="pt-4 border-t border-slate-100">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-blue-600" />
+            <AlertTriangle className="w-4 h-4 text-[#F97316]" />
             3. Violation Charge & Penalty Appraisal (INR)
           </h3>
 
@@ -702,7 +722,7 @@ export const RecordViolationView: React.FC = () => {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ViolationCategory)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316] bg-white"
               >
                 {Object.keys(CATEGORY_FINE_MAP).map((cat) => (
                   <option key={cat} value={cat}>
@@ -722,7 +742,7 @@ export const RecordViolationView: React.FC = () => {
               <select
                 value={severity}
                 onChange={(e) => setSeverity(e.target.value as SeverityLevel)}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white"
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316] bg-white"
               >
                 <option value="Low">Low Severity</option>
                 <option value="Medium">Medium Severity</option>
@@ -739,20 +759,20 @@ export const RecordViolationView: React.FC = () => {
                 type="datetime-local"
                 value={timestamp}
                 onChange={(e) => setTimestamp(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:border-[#F97316]"
               />
             </div>
 
             {/* Calculated Fine Display Card */}
-            <div className="sm:col-span-2 bg-blue-50/70 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
+            <div className="sm:col-span-2 bg-orange-50/80 border border-orange-200 rounded-lg p-3 flex items-center justify-between">
               <div>
-                <span className="text-[11px] font-semibold text-blue-900 block">Assessed Penalty Appraisal</span>
+                <span className="text-[11px] font-semibold text-[#9A3412] block">Assessed Penalty Appraisal</span>
                 <span className="text-[11px] text-slate-600">
                   Base ₹{baseFine} × {selectedZone?.fineMultiplier}x zone multiplier
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-xl font-black font-mono text-blue-900 tabular-nums">
+                <span className="text-xl font-black font-mono text-[#9A3412] tabular-nums">
                   {formatINR(calculatedFine)}
                 </span>
               </div>
@@ -763,7 +783,7 @@ export const RecordViolationView: React.FC = () => {
         {/* Section 4: Photo Evidence */}
         <div className="pt-4 border-t border-slate-100">
           <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Camera className="w-4 h-4 text-blue-600" />
+            <Camera className="w-4 h-4 text-[#F97316]" />
             4. Photo Evidence Documentation
           </h3>
 
@@ -800,7 +820,7 @@ export const RecordViolationView: React.FC = () => {
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoUpload}
-                  className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-slate-600 cursor-pointer"
+                  className="text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-[#9A3412] hover:file:bg-orange-100 text-slate-600 cursor-pointer"
                 />
               </div>
 
@@ -820,7 +840,7 @@ export const RecordViolationView: React.FC = () => {
                       onClick={() => setPhotoUrl(preset.url)}
                       className={`p-2 rounded border text-left text-[11px] font-medium transition-all ${
                         photoUrl === preset.url
-                          ? 'border-blue-600 bg-blue-50 text-blue-900 font-semibold'
+                          ? 'border-[#F97316] bg-orange-50 text-orange-950 font-semibold'
                           : 'border-slate-200 hover:border-slate-300 text-slate-700'
                       }`}
                     >
@@ -895,7 +915,7 @@ export const RecordViolationView: React.FC = () => {
 
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-semibold shadow-xs transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs md:text-sm font-semibold shadow-xs transition-colors"
           >
             <FilePlus2 className="w-4 h-4" />
             Issue Violation & Generate Citation

@@ -80,10 +80,10 @@ export const CampusGpsMap: React.FC<CampusGpsMapProps> = ({
 
         group.clearLayers();
 
-        // 1. Plot all parking zones with subtle blue circle geofences
+        // 1. Plot all parking zones with subtle orange/slate circle geofences
         allZones.forEach((z) => {
           const isSelected = selectedZone?.id === z.id;
-          const zoneColor = isSelected ? '#2563EB' : '#64748B';
+          const zoneColor = isSelected ? '#EA580C' : '#78716C';
 
           const circle = L.circle([z.latitude, z.longitude], {
             color: zoneColor,
@@ -112,7 +112,7 @@ export const CampusGpsMap: React.FC<CampusGpsMapProps> = ({
           const officerIcon = L.divIcon({
             className: 'custom-gps-pin',
             html: `
-              <div style="background-color: ${isMismatch ? '#DC2626' : '#2563EB'}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white;">
+              <div style="background-color: ${isMismatch ? '#DC2626' : '#F97316'}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white;">
                 <div style="width: 6px; height: 6px; background-color: white; border-radius: 50%;"></div>
               </div>
             `,

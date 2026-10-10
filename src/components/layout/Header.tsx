@@ -53,12 +53,12 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
 
   const roleBadgeStyle = {
     OWNER: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-    OFFICER: 'bg-blue-50 text-blue-800 border-blue-200',
+    OFFICER: 'bg-orange-50 text-orange-900 border-orange-200',
     ADMIN: 'bg-purple-50 text-purple-800 border-purple-200',
   }[currentUser?.role || 'OFFICER'];
 
   return (
-    <header className="bg-white border-b border-slate-200/90 sticky top-0 z-30 px-4 md:px-8 py-3">
+    <header className="bg-white border-b border-stone-200/90 sticky top-0 z-30 px-4 md:px-8 py-3">
       <div className="flex items-center justify-between gap-4">
         {/* Left: Mobile hamburger + Active Role Brand */}
         <div className="flex items-center gap-3 min-w-0">
@@ -72,9 +72,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
 
           <div className="min-w-0">
             <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-              <span className="font-bold text-[#142B4A]">ParkGuard</span>
+              <span className="font-bold text-[#9A3412]">ParkGuard</span>
               <span>/</span>
-              <span className="font-semibold text-blue-600 truncate">
+              <span className="font-semibold text-[#F97316] truncate">
                 {currentUser?.role === 'OWNER' ? 'Vehicle Owner Portal' :
                  currentUser?.role === 'OFFICER' ? 'Officer Field Terminal' :
                  'Supervisor Command'}
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search plate (e.g. KA01AB1234)..."
-                className="w-52 xl:w-60 pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 font-mono"
+                className="w-52 xl:w-60 pl-8 pr-3 py-1.5 bg-stone-50 border border-stone-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#F97316] focus:ring-1 focus:ring-[#F97316]/30 font-mono"
               />
             </form>
           )}

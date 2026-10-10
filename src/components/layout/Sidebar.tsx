@@ -1,20 +1,18 @@
+
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  FilePlus2, 
-  ClipboardList, 
-  Car, 
-  AlertOctagon, 
-  MapPin, 
-  Receipt, 
-  BarChart3, 
-  Settings, 
-  ShieldCheck, 
+import {
+  LayoutDashboard,
+  FilePlus2,
+  ClipboardList,
+  Car,
+  AlertOctagon,
+  MapPin,
+  Receipt,
+  BarChart3,
+  Settings,
+  ShieldCheck,
   RotateCcw,
   Building2,
-  MessageSquare,
-  History,
-  Users
 } from 'lucide-react';
 import { useParking } from '../../context/ParkingContext';
 
@@ -23,30 +21,36 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, onCloseMobile }) => {
-  const { 
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpenMobile,
+  onCloseMobile,
+}) => {
+  const {
     currentUser,
-    activeTab, 
-    setActiveTab, 
-    violations, 
+    activeTab,
+    setActiveTab,
+    violations,
     allViolationsRaw,
-    getAllVehicleProfiles, 
-    resetToDemoData 
+    getAllVehicleProfiles,
+    resetToDemoData,
   } = useParking();
 
   const role = currentUser?.role || 'OFFICER';
 
-  // Counts
-  const pendingAppealsCount = allViolationsRaw.filter(v => v.status === 'Appealed' && v.appeal?.status === 'Pending').length;
-  const pendingReviewsCount = allViolationsRaw.filter(v => ['Reported', 'Under Review'].includes(v.status)).length;
-  const repeatCount = getAllVehicleProfiles().filter(p => p.isRepeatOffender).length;
+  const pendingReviewsCount = allViolationsRaw.filter((v) =>
+    ['Reported', 'Under Review'].includes(v.status)
+  ).length;
+
+  const repeatCount = getAllVehicleProfiles().filter(
+    (p) => p.isRepeatOffender
+  ).length;
+
   const myViolationsCount = violations.length;
 
-  // Role-specific nav items
   interface NavItem {
     id: string;
     label: string;
-    icon: any;
+    icon: React.ElementType;
     highlight?: boolean;
     badge?: number;
     badgeColor?: string;
@@ -58,26 +62,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, onCloseMobile })
     navItems = [
       { id: 'dashboard', label: 'My Dashboard', icon: LayoutDashboard },
       { id: 'vehicles', label: 'My Vehicles', icon: Car },
-      { id: 'violations', label: 'My Citations', icon: ClipboardList, badge: myViolationsCount > 0 ? myViolationsCount : undefined },
+      {
+        id: 'violations',
+        label: 'My Citations',
+        icon: ClipboardList,
+        badge: myViolationsCount > 0 ? myViolationsCount : undefined,
+      },
       { id: 'settings', label: 'Account Profile', icon: Settings },
     ];
   } else if (role === 'OFFICER') {
     navItems = [
       { id: 'dashboard', label: 'Officer Terminal', icon: LayoutDashboard },
-      { id: 'record', label: 'Record Violation', icon: FilePlus2, highlight: true },
+      {
+        id: 'record',
+        label: 'Record Violation',
+        icon: FilePlus2,
+        highlight: true,
+      },
       { id: 'vehicles', label: 'Vehicle Lookup', icon: Car },
       { id: 'violations', label: 'Shift Citations Log', icon: ClipboardList },
-      { id: 'repeat-offenders', label: 'Repeat Watchlist', icon: AlertOctagon, badge: repeatCount > 0 ? repeatCount : undefined },
+      {
+        id: 'repeat-offenders',
+        label: 'Repeat Watchlist',
+        icon: AlertOctagon,
+        badge: repeatCount > 0 ? repeatCount : undefined,
+      },
       { id: 'settings', label: 'Officer Profile', icon: Settings },
     ];
   } else {
-    // ADMIN
     navItems = [
       { id: 'dashboard', label: 'Command Overview', icon: LayoutDashboard },
-      { id: 'violations', label: 'All Citations', icon: ClipboardList, badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined },
+      {
+        id: 'violations',
+        label: 'All Citations',
+        icon: ClipboardList,
+        badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined,
+      },
       { id: 'record', label: 'Record Violation', icon: FilePlus2 },
       { id: 'vehicles', label: 'Vehicle Registry', icon: Car },
-      { id: 'repeat-offenders', label: 'Repeat Offenders', icon: AlertOctagon, badge: repeatCount > 0 ? repeatCount : undefined, badgeColor: 'bg-rose-500 text-white' },
+      {
+        id: 'repeat-offenders',
+        label: 'Repeat Offenders',
+        icon: AlertOctagon,
+        badge: repeatCount > 0 ? repeatCount : undefined,
+      },
       { id: 'zones', label: 'Parking Zones', icon: MapPin },
       { id: 'penalties', label: 'Penalties Ledger', icon: Receipt },
       { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
@@ -93,51 +121,61 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, onCloseMobile })
   return (
     <>
       {isOpenMobile && (
-        <div 
+        <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-900/60 z-40 md:hidden backdrop-blur-xs transition-opacity"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity md:hidden"
         />
       )}
 
-      <aside className={`
-        fixed md:static inset-y-0 left-0 z-50
-        w-64 bg-[#142B4A] text-slate-200 flex flex-col shrink-0
-        transform transition-transform duration-200 ease-in-out
-        ${isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-        border-r border-slate-800/80 shadow-xl md:shadow-none
-      `}>
-        {/* Brand Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between">
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col
+          border-r border-neutral-800 bg-black text-white shadow-xl
+          transition-transform duration-200 ease-in-out
+          md:static md:shadow-none
+          ${isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        {/* Brand */}
+        <div className="flex items-center justify-between border-b border-neutral-800 p-5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-black shadow-sm">
+              <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-base font-bold text-white tracking-tight flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 text-base font-bold tracking-tight text-white">
                 ParkGuard
               </div>
-              <div className="text-[11px] text-blue-300 font-medium capitalize">
+              <div className="text-[11px] font-medium capitalize text-neutral-400">
                 {role.toLowerCase()} workspace
               </div>
             </div>
           </div>
         </div>
 
-        {/* Current User Pill */}
-        <div className="px-4 py-3 bg-white/5 border-b border-white/5 text-xs flex items-center justify-between">
+        {/* Current User */}
+        <div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-950 px-4 py-3 text-xs">
           <div className="truncate pr-2">
-            <span className="font-semibold text-white block truncate">{currentUser?.name}</span>
-            <span className="text-[10px] text-slate-400 font-mono truncate">{currentUser?.email}</span>
+            <span className="block truncate font-semibold text-white">
+              {currentUser?.name}
+            </span>
+            <span className="truncate font-mono text-[10px] text-neutral-400">
+              {currentUser?.email}
+            </span>
           </div>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase bg-blue-500/20 text-blue-300 border border-blue-400/20">
+          <span className="rounded border border-neutral-700 bg-neutral-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
             {role}
           </span>
         </div>
 
-        {/* Navigation items */}
-        <div className="flex-1 py-4 px-3 overflow-y-auto space-y-1">
-          <div className="px-3 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-            {role === 'OWNER' ? 'My Account' : role === 'OFFICER' ? 'Field Patrol' : 'Administration'}
+        {/* Navigation */}
+        <div className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+            {role === 'OWNER'
+              ? 'My Account'
+              : role === 'OFFICER'
+                ? 'Field Patrol'
+                : 'Administration'}
           </div>
 
           {navItems.map((item) => {
@@ -149,26 +187,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, onCloseMobile })
                 key={item.id}
                 onClick={() => handleNavClick(item.id)}
                 className={`
-                  w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium
-                  transition-all duration-150 group
-                  ${isActive 
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30 font-semibold' 
+                  group flex w-full items-center justify-between rounded-lg
+                  px-3 py-2.5 text-sm font-medium transition-colors duration-150
+                  ${isActive
+                    ? 'bg-white font-semibold text-black shadow-sm'
                     : item.highlight
-                      ? 'text-blue-300 hover:text-white hover:bg-white/10 bg-white/5'
-                      : 'text-slate-300 hover:text-white hover:bg-white/10'
+                      ? 'bg-neutral-900 text-white hover:bg-neutral-800'
+                      : 'text-neutral-300 hover:bg-neutral-900 hover:text-white'
                   }
                 `}
               >
                 <div className="flex items-center gap-3 truncate">
-                  <Icon className={`w-4 h-4 shrink-0 transition-colors ${isActive ? 'text-white' : item.highlight ? 'text-blue-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                  <Icon
+                    className={`h-4 w-4 shrink-0 ${isActive
+                      ? 'text-black'
+                      : 'text-neutral-400 group-hover:text-white'
+                      }`}
+                  />
                   <span className="truncate">{item.label}</span>
                 </div>
 
                 {item.badge !== undefined && (
-                  <span className={`
-                    text-[11px] font-semibold px-2 py-0.5 rounded-full font-mono tabular-nums
-                    ${item.badgeColor || (isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-300')}
-                  `}>
+                  <span
+                    className={`
+                      rounded-full px-2 py-0.5 font-mono text-[11px]
+                      font-semibold tabular-nums
+                      ${isActive
+                        ? 'bg-neutral-200 text-black'
+                        : 'bg-neutral-800 text-neutral-200'
+                      }
+                    `}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -177,28 +226,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpenMobile, onCloseMobile })
           })}
         </div>
 
-        {/* Demo Mode / Storage Status Box */}
-        <div className="p-4 border-t border-white/10 bg-[#0E1E34]">
-          <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-xs space-y-2">
-            <div className="flex items-center justify-between text-slate-300">
-              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                RBAC Prototype
+        {/* Demo and Storage Status */}
+        <div className="border-t border-neutral-800 bg-neutral-950 p-4">
+          <div className="space-y-2 rounded-lg border border-neutral-800 bg-neutral-900 p-3 text-xs">
+            <div className="flex items-center justify-between text-neutral-300">
+              <span className="flex items-center gap-1.5 font-semibold text-white">
+                <Building2 className="h-3.5 w-3.5 text-neutral-300" />
+                RBAC System
               </span>
-              <span className="text-[10px] text-emerald-400 font-medium">Local Live</span>
+              <span className="text-[10px] font-medium text-neutral-400">
+                Local Live
+              </span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              OWASP least privilege & scoped data isolation active.
+
+            <p className="text-[11px] leading-relaxed text-neutral-400">
+              OWASP least privilege &amp; scoped data isolation active.
             </p>
+
             <button
               onClick={() => {
-                if (window.confirm('Reset all violations, users, and zones to original demo scenario?')) {
+                if (
+                  window.confirm(
+                    'Reset all violations, users, and zones to original demo scenario?'
+                  )
+                ) {
                   resetToDemoData();
                 }
               }}
-              className="w-full mt-1 flex items-center justify-center gap-1.5 py-1.5 px-2 bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white rounded text-[11px] font-medium transition-colors"
+              className="mt-1 flex w-full items-center justify-center gap-1.5 rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-[11px] font-medium text-white transition-colors hover:bg-neutral-700"
             >
-              <RotateCcw className="w-3 h-3" />
+              <RotateCcw className="h-3 w-3" />
               Reset Demo Records
             </button>
           </div>

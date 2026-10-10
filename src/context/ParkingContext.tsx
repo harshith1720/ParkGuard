@@ -114,14 +114,14 @@ export const ParkingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return INITIAL_USERS;
   });
 
-  // Current logged in user (default to officer to show enforcement first, or null)
+  // Unauthenticated visitors start as null to show login page first
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_AUTH_USER);
       if (stored) return JSON.parse(stored);
     } catch (e) {}
-    // Default logged in as officer for immediate usability
-    return INITIAL_USERS.find(u => u.role === 'OFFICER') || INITIAL_USERS[0];
+    // Unauthenticated visitors see the login page first
+    return null;
   });
 
   const [allViolations, setAllViolations] = useState<Violation[]>(() => {
@@ -617,7 +617,7 @@ export const ParkingProvider: React.FC<{ children: ReactNode }> = ({ children })
       .reduce((sum, v) => sum + (v.fineAmount || 0), 0);
 
     const isRepeatOffender = confirmed >= 3 || vehicleViolations.length >= 3;
-    const bootTowEligible = confirmed >= 4 || unresolvedPenalties >= 250;
+    const bootTowEligible = confirmed >= 4 || unresolvedPenalties >= 3000;
 
     return {
       plate: clean,
@@ -689,7 +689,7 @@ export const ParkingProvider: React.FC<{ children: ReactNode }> = ({ children })
       'Category',
       'Severity',
       'Date & Time',
-      'Fine Amount ($)',
+      'Fine Amount (INR ₹)',
       'Status',
       'Officer Name',
       'Officer Badge',

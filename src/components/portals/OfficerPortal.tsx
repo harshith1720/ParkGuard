@@ -12,7 +12,10 @@ import {
   Clock, 
   Printer, 
   History,
-  Info
+  Info,
+  Navigation,
+  Crosshair,
+  MapPin
 } from 'lucide-react';
 import { useParking } from '../../context/ParkingContext';
 import { 
@@ -25,7 +28,8 @@ import {
 import { CATEGORY_FINE_MAP, KNOWN_VEHICLES_REGISTRY } from '../../data/initialData';
 import { StatusBadge, SeverityBadge } from '../common/StatusBadge';
 import { CitationPrintModal } from '../modals/CitationPrintModal';
-import { formatINR } from '../../utils/formatters';
+import { CampusGpsMap } from '../common/CampusGpsMap';
+import { formatINR, formatISTDate } from '../../utils/formatters';
 
 export const OfficerPortal: React.FC = () => {
   const { 
@@ -58,6 +62,11 @@ export const OfficerPortal: React.FC = () => {
   const [officerNotes, setOfficerNotes] = useState('Vehicle unattended adjacent to emergency access curb.');
   const [photoUrl, setPhotoUrl] = useState<string>('/src/assets/images/parking_violation_curb_1791630912103.jpg');
 
+  // GPS Location states
+  const [gpsStatus, setGpsStatus] = useState<'IDLE' | 'LOCATING' | 'DETECTED' | 'DENIED' | 'MANUAL'>('IDLE');
+  const [gpsCoords, setGpsCoords] = useState<{ latitude: number; longitude: number; accuracyMeters: number; capturedAt: string } | null>(null);
+  const [detectedAddress, setDetectedAddress] = useState<string>('');
+
   // Duplicate candidates
   const [duplicates, setDuplicates] = useState<DuplicateCandidate[]>([]);
   const [showDuplicateDrawer, setShowDuplicateDrawer] = useState(false);
@@ -69,6 +78,53 @@ export const OfficerPortal: React.FC = () => {
   const myShiftCitations = allViolationsRaw.filter(
     v => v.officerBadge === currentUser?.badgeId || v.reportedByOfficerId === currentUser?.id
   );
+
+  const selectedZone = zones.find(z => z.id === zoneId) || zones[0];
+
+  const handleDetectLocation = () => {
+    if (!navigator.geolocation) {
+      setGpsStatus('DENIED');
+      return;
+    }
+
+    setGpsStatus('LOCATING');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const coords = {
+          latitude: parseFloat(pos.coords.latitude.toFixed(6)),
+          longitude: parseFloat(pos.coords.longitude.toFixed(6)),
+          accuracyMeters: Math.round(pos.coords.accuracy),
+          capturedAt: new Date().toISOString(),
+        };
+        setGpsCoords(coords);
+        setGpsStatus('DETECTED');
+
+        try {
+          const res = await fetch('/api/geocode/reverse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ latitude: coords.latitude, longitude: coords.longitude }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.address) {
+              setDetectedAddress(data.address);
+              if (!specificLocation) {
+                setSpecificLocation(data.address);
+              }
+            }
+          }
+        } catch {
+          // ignore network glitch
+        }
+      },
+      (err) => {
+        console.warn('GPS location request denied or timed out:', err);
+        setGpsStatus('DENIED');
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
 
   const handleLookup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +192,9 @@ export const OfficerPortal: React.FC = () => {
       photoUrl,
       isDuplicateFlagged: duplicates.length > 0,
       linkedDuplicateId: duplicates[0]?.existingViolation.id,
+      locationMode: gpsCoords ? 'GPS_CAPTURED' : 'MANUAL_EXCEPTION',
+      gpsCoordinates: gpsCoords || undefined,
+      gpsAddress: detectedAddress || undefined,
     });
 
     setSubmittedViolation(created);
@@ -146,9 +205,9 @@ export const OfficerPortal: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Officer Console Header */}
-      <div className="bg-[#142B4A] text-white rounded-xl p-5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-[#9A3412] text-white rounded-xl p-5 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
+          <div className="w-11 h-11 rounded-xl bg-[#F97316] text-white flex items-center justify-center font-bold shadow-xs">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
@@ -156,30 +215,30 @@ export const OfficerPortal: React.FC = () => {
               <h2 className="text-base font-bold text-white">
                 Officer Field Terminal · {currentUser?.name}
               </h2>
-              <span className="text-[10px] bg-blue-500/30 text-blue-200 font-mono font-bold px-2 py-0.5 rounded border border-blue-400/30">
+              <span className="text-[10px] bg-white/20 text-white font-mono font-bold px-2 py-0.5 rounded border border-white/30">
                 Badge #{currentUser?.badgeId || 'OFF-402'}
               </span>
             </div>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <p className="text-xs text-orange-100 mt-0.5">
               Assigned Patrol Zone: <strong>{currentUser?.assignedZone || 'Campus Central & Decks'}</strong> · Shift: Active On-Duty
             </p>
           </div>
         </div>
 
-        <div className="text-right text-xs text-slate-300 font-mono">
+        <div className="text-right text-xs text-orange-100 font-mono">
           Citations Filed This Shift: <strong className="text-white text-sm">{myShiftCitations.length}</strong>
         </div>
       </div>
 
       {/* Step 1: Vehicle Search / Quick Scan Section */}
-      <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Search className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#F97316]" />
               1. Vehicle Lookup & Repeat Offender Scan
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-stone-500">
               Query vehicle registration to verify parking permit, affiliation, and repeat offender status before citing.
             </p>
           </div>
@@ -191,11 +250,11 @@ export const OfficerPortal: React.FC = () => {
             value={lookupPlate}
             onChange={(e) => setLookupPlate(e.target.value.toUpperCase())}
             placeholder="Enter Plate (e.g. KA01AB1234)..."
-            className="flex-1 px-3 py-2 text-xs font-mono font-bold tracking-wider uppercase border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500"
+            className="flex-1 px-3 py-2 text-xs font-mono font-bold tracking-wider uppercase border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-[#142B4A] hover:bg-slate-800 text-white rounded-lg text-xs font-bold"
+            className="px-4 py-2 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs font-bold transition-colors shadow-xs"
           >
             Scan Plate
           </button>
@@ -203,12 +262,12 @@ export const OfficerPortal: React.FC = () => {
 
         {/* Lookup Result Box */}
         {inspectedProfile && (
-          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-3 animate-in fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200">
+          <div className="p-4 bg-orange-50/40 border border-orange-200/80 rounded-xl text-xs space-y-3 animate-in fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-orange-200/60">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-black text-slate-900">{inspectedProfile.plate}</span>
-                <span className="font-semibold text-slate-700">· {inspectedProfile.makeModel}</span>
-                <span className="text-slate-500">({inspectedProfile.ownerName})</span>
+                <span className="font-mono text-base font-black text-stone-900">{inspectedProfile.plate}</span>
+                <span className="font-semibold text-stone-700">· {inspectedProfile.makeModel}</span>
+                <span className="text-stone-500">({inspectedProfile.ownerName})</span>
               </div>
 
               {inspectedProfile.isRepeatOffender ? (
@@ -295,14 +354,14 @@ export const OfficerPortal: React.FC = () => {
           <div className="flex items-center gap-2 pt-1">
             <button
               onClick={() => setShowPrintModal(true)}
-              className="px-3 py-1.5 bg-[#142B4A] text-white rounded font-semibold flex items-center gap-1.5"
+              className="px-3.5 py-1.5 bg-[#9A3412] hover:bg-[#7C2D12] text-white rounded-lg font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <Printer className="w-3.5 h-3.5" />
               Print Windshield Notice
             </button>
             <button
               onClick={() => setSubmittedViolation(null)}
-              className="px-3 py-1.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded font-semibold"
+              className="px-3.5 py-1.5 bg-white border border-emerald-300 text-emerald-800 hover:bg-emerald-100 rounded-lg font-semibold transition-colors"
             >
               Issue Another Citation
             </button>
@@ -311,13 +370,13 @@ export const OfficerPortal: React.FC = () => {
       )}
 
       {/* Step 2: Record Violation Form */}
-      <form onSubmit={handleSubmit} className="bg-white border border-slate-200/90 rounded-xl p-6 shadow-xs space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white border border-stone-200/90 rounded-xl p-6 shadow-xs space-y-6">
         <div>
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <FilePlus2 className="w-4 h-4 text-blue-600" />
+          <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+            <FilePlus2 className="w-4 h-4 text-[#F97316]" />
             2. Record Infraction & Evidentiary Dossier
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-stone-500 mt-0.5">
             Complete required infraction details. Fines are calculated automatically by campus regulations.
           </p>
         </div>
@@ -332,34 +391,34 @@ export const OfficerPortal: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Vehicle License Plate *</label>
+            <label className="block font-semibold text-stone-700 mb-1">Vehicle License Plate *</label>
             <input
               type="text"
               required
               value={vehiclePlate}
               onChange={(e) => setVehiclePlate(e.target.value.toUpperCase())}
               placeholder="e.g. KA01AB1234"
-              className="w-full px-3 py-2 font-mono font-bold uppercase border border-slate-300 rounded-lg"
+              className="w-full px-3 py-2 font-mono font-bold uppercase border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
             />
             {errors.vehiclePlate && <span className="text-rose-600 text-[11px]">{errors.vehiclePlate}</span>}
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">State / Jurisdiction</label>
+            <label className="block font-semibold text-stone-700 mb-1">State / Jurisdiction</label>
             <input
               type="text"
               value={vehicleState}
               onChange={(e) => setVehicleState(e.target.value.toUpperCase())}
-              className="w-full px-3 py-2 font-mono uppercase border border-slate-300 rounded-lg"
+              className="w-full px-3 py-2 font-mono uppercase border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
             />
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Vehicle Classification</label>
+            <label className="block font-semibold text-stone-700 mb-1">Vehicle Classification</label>
             <select
               value={vehicleType}
               onChange={(e) => setVehicleType(e.target.value as any)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white focus:outline-none focus:border-[#F97316]"
             >
               <option value="Sedan">Sedan</option>
               <option value="SUV">SUV</option>
@@ -372,25 +431,25 @@ export const OfficerPortal: React.FC = () => {
           </div>
 
           <div className="sm:col-span-3">
-            <label className="block font-semibold text-slate-700 mb-1">Make / Model / Color</label>
+            <label className="block font-semibold text-stone-700 mb-1">Make / Model / Color</label>
             <input
               type="text"
               value={vehicleMakeModel}
               onChange={(e) => setVehicleMakeModel(e.target.value)}
               placeholder="e.g. Honda Civic (Midnight Blue)"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
             />
           </div>
         </div>
 
         {/* Location & Category */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-4 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs pt-4 border-t border-stone-100">
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Enforcement Zone *</label>
+            <label className="block font-semibold text-stone-700 mb-1">Enforcement Zone *</label>
             <select
               value={zoneId}
               onChange={(e) => setZoneId(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white focus:outline-none focus:border-[#F97316]"
             >
               {zones.map(z => (
                 <option key={z.id} value={z.id}>{z.name} ({z.fineMultiplier}x Fine)</option>
@@ -399,24 +458,24 @@ export const OfficerPortal: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Specific Location / Bay / Curb *</label>
+            <label className="block font-semibold text-stone-700 mb-1">Specific Location / Bay / Curb *</label>
             <input
               type="text"
               required
               value={specificLocation}
               onChange={(e) => setSpecificLocation(e.target.value)}
               placeholder="e.g. Science Quad Red Curb Fire Line"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
             />
             {errors.specificLocation && <span className="text-rose-600 text-[11px]">{errors.specificLocation}</span>}
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Violation Category *</label>
+            <label className="block font-semibold text-stone-700 mb-1">Violation Category *</label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as any)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white focus:outline-none focus:border-[#F97316]"
             >
               {Object.keys(CATEGORY_FINE_MAP).map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
@@ -425,11 +484,11 @@ export const OfficerPortal: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 mb-1">Severity Rating</label>
+            <label className="block font-semibold text-stone-700 mb-1">Severity Rating</label>
             <select
               value={severity}
               onChange={(e) => setSeverity(e.target.value as any)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white"
+              className="w-full px-3 py-2 border border-stone-300 rounded-lg bg-white focus:outline-none focus:border-[#F97316]"
             >
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
@@ -439,15 +498,72 @@ export const OfficerPortal: React.FC = () => {
           </div>
         </div>
 
+        {/* GPS Geolocation Verification & Map Preview */}
+        <div className="pt-4 border-t border-stone-100 space-y-3 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <span className="font-semibold text-stone-800 flex items-center gap-1.5">
+                <Navigation className="w-4 h-4 text-[#F97316]" />
+                Field GPS Geolocation Verification & Timestamp
+              </span>
+              <p className="text-[11px] text-stone-500">
+                Captures real device coordinates, precision accuracy, and capture timestamp to ensure verifiable reporting.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDetectLocation}
+              disabled={gpsStatus === 'LOCATING'}
+              className="px-3.5 py-1.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 self-start sm:self-auto shadow-xs"
+            >
+              <Crosshair className={`w-3.5 h-3.5 ${gpsStatus === 'LOCATING' ? 'animate-spin' : ''}`} />
+              {gpsStatus === 'LOCATING' ? 'Acquiring GPS Fix...' : gpsCoords ? 'Re-acquire GPS Fix' : 'Auto-Detect Device GPS'}
+            </button>
+          </div>
+
+          {gpsCoords && (
+            <div className="p-3 bg-orange-50/70 border border-orange-200/80 rounded-lg text-xs space-y-1">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-[#9A3412]">Coordinates:</span>
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-orange-200 text-stone-800 font-semibold">
+                    {gpsCoords.latitude.toFixed(6)}, {gpsCoords.longitude.toFixed(6)}
+                  </span>
+                  <span className="text-stone-600">· Accuracy: <strong>±{gpsCoords.accuracyMeters}m</strong></span>
+                </div>
+                <div className="text-stone-500">
+                  Captured at: <strong className="text-stone-700">{formatISTDate(gpsCoords.capturedAt)}</strong>
+                </div>
+              </div>
+              {detectedAddress && (
+                <div className="text-[11px] text-stone-700 pt-1">
+                  <span className="font-semibold text-stone-900">Geocoded Address:</span> {detectedAddress}
+                </div>
+              )}
+            </div>
+          )}
+
+          {gpsStatus === 'DENIED' && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+              GPS location request was denied by browser or timed out. Ensure location permissions are granted in browser settings or enter the bay/curb location manually above.
+            </div>
+          )}
+
+          {/* Interactive Map Preview */}
+          <div className="rounded-xl overflow-hidden border border-stone-200">
+            <CampusGpsMap selectedZone={selectedZone} officerLocation={gpsCoords} height="200px" />
+          </div>
+        </div>
+
         {/* Photographic Evidence */}
-        <div className="pt-4 border-t border-slate-100 space-y-3 text-xs">
-          <label className="block font-semibold text-slate-700">Photo Evidence Capture / Upload</label>
+        <div className="pt-4 border-t border-stone-100 space-y-3 text-xs">
+          <label className="block font-semibold text-stone-700">Photo Evidence Capture / Upload</label>
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-32 h-24 rounded-lg border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
+            <div className="w-32 h-24 rounded-lg border border-stone-200 overflow-hidden bg-stone-100 shrink-0">
               {photoUrl ? (
                 <img src={photoUrl} alt="Evidence" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">No Photo</div>
+                <div className="w-full h-full flex items-center justify-center text-stone-400">No Photo</div>
               )}
             </div>
 
@@ -456,21 +572,21 @@ export const OfficerPortal: React.FC = () => {
                 type="file"
                 accept="image/*"
                 onChange={handlePhotoUpload}
-                className="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:bg-blue-50 file:text-blue-700 font-medium"
+                className="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:bg-orange-50 file:text-[#9A3412] font-medium"
               />
               <div className="flex items-center gap-2 text-[11px]">
-                <span className="text-slate-500">Quick presets:</span>
+                <span className="text-stone-500">Quick presets:</span>
                 <button
                   type="button"
                   onClick={() => setPhotoUrl('/src/assets/images/parking_violation_curb_1791630912103.jpg')}
-                  className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-semibold text-slate-700"
+                  className="px-2 py-0.5 bg-stone-100 hover:bg-orange-100 hover:text-[#9A3412] rounded font-semibold text-stone-700 transition-colors"
                 >
                   Red Curb
                 </button>
                 <button
                   type="button"
                   onClick={() => setPhotoUrl('/src/assets/images/parking_violation_bay_1791630926958.jpg')}
-                  className="px-2 py-0.5 bg-slate-100 hover:bg-slate-200 rounded font-semibold text-slate-700"
+                  className="px-2 py-0.5 bg-stone-100 hover:bg-orange-100 hover:text-[#9A3412] rounded font-semibold text-stone-700 transition-colors"
                 >
                   Faculty Bay
                 </button>
@@ -480,15 +596,15 @@ export const OfficerPortal: React.FC = () => {
         </div>
 
         {/* Officer Notes */}
-        <div className="pt-4 border-t border-slate-100 text-xs">
-          <label className="block font-semibold text-slate-700 mb-1">Patrol Officer Field Notes *</label>
+        <div className="pt-4 border-t border-stone-100 text-xs">
+          <label className="block font-semibold text-stone-700 mb-1">Patrol Officer Field Notes *</label>
           <textarea
             required
             rows={2}
             value={officerNotes}
             onChange={(e) => setOfficerNotes(e.target.value)}
             placeholder="Document vehicle positioning, safety obstruction, or towing warning placed on windshield..."
-            className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+            className="w-full px-3 py-2 border border-stone-300 rounded-lg focus:outline-none focus:border-[#F97316]"
           />
           {errors.officerNotes && <span className="text-rose-600 text-[11px]">{errors.officerNotes}</span>}
         </div>
@@ -496,7 +612,7 @@ export const OfficerPortal: React.FC = () => {
         <div className="pt-2 flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-sm flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-2 transition-colors"
           >
             <FilePlus2 className="w-4 h-4" />
             Submit Citation for Supervisor Review
@@ -505,25 +621,25 @@ export const OfficerPortal: React.FC = () => {
       </form>
 
       {/* Step 3: My Shift Citations Log */}
-      <div className="bg-white border border-slate-200/90 rounded-xl p-5 shadow-xs space-y-4">
+      <div className="bg-white border border-stone-200/90 rounded-xl p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-bold text-stone-900 flex items-center gap-2">
+              <History className="w-4 h-4 text-[#F97316]" />
               3. My Field Patrol Log (Badge #{currentUser?.badgeId})
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-stone-500">
               Live record of citations filed during this shift.
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-600">
+          <span className="text-xs font-semibold text-stone-600">
             {myShiftCitations.length} recorded
           </span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+            <thead className="bg-stone-50 text-stone-600 font-semibold border-b border-stone-200">
               <tr>
                 <th className="py-2.5 px-3">Citation ID</th>
                 <th className="py-2.5 px-3">Vehicle Plate</th>
@@ -533,14 +649,14 @@ export const OfficerPortal: React.FC = () => {
                 <th className="py-2.5 px-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-stone-100">
               {myShiftCitations.map(v => (
-                <tr key={v.id} className="hover:bg-slate-50/70">
-                  <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{v.id}</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{v.vehiclePlate}</td>
-                  <td className="py-2.5 px-3 font-medium text-slate-800">{v.category}</td>
-                  <td className="py-2.5 px-3 text-slate-600">{v.specificLocation}</td>
-                  <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900 tabular-nums">
+                <tr key={v.id} className="hover:bg-orange-50/30">
+                  <td className="py-2.5 px-3 font-mono font-bold text-stone-900">{v.id}</td>
+                  <td className="py-2.5 px-3 font-mono font-bold text-stone-900">{v.vehiclePlate}</td>
+                  <td className="py-2.5 px-3 font-medium text-stone-800">{v.category}</td>
+                  <td className="py-2.5 px-3 text-stone-600">{v.specificLocation}</td>
+                  <td className="py-2.5 px-3 text-right font-mono font-bold text-stone-900 tabular-nums">
                     {formatINR(v.fineAmount)}
                   </td>
                   <td className="py-2.5 px-3">
@@ -554,9 +670,9 @@ export const OfficerPortal: React.FC = () => {
       </div>
 
       {/* Officer Least-Privilege Policy Box */}
-      <div className="p-4 bg-slate-100 rounded-xl text-xs text-slate-500 space-y-1">
-        <div className="font-semibold text-slate-700 flex items-center gap-1.5">
-          <Info className="w-4 h-4 text-blue-600" />
+      <div className="p-4 bg-stone-100/90 border border-stone-200/60 rounded-xl text-xs text-stone-500 space-y-1">
+        <div className="font-semibold text-stone-700 flex items-center gap-1.5">
+          <Info className="w-4 h-4 text-[#9A3412]" />
           Enforcement Officer Authorization Limits (OWASP Principle of Least Privilege)
         </div>
         <p className="text-[11px] leading-relaxed">
